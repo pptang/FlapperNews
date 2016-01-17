@@ -50,7 +50,7 @@ app.config([
   }
 ]);
 
-app.factory('posts', ['$http', function($http) {
+app.factory('posts', ['$http', 'auth', function($http, auth) {
   var o = {
     posts: []
   };
@@ -61,14 +61,17 @@ app.factory('posts', ['$http', function($http) {
   };
 
   o.create = function(post) {
-    return $http.post('/posts', post).success(function(data) {
+    return $http.post('/posts', post, {
+      headers: {Authorization: 'Bearer ' + auth.getToken()}
+    }).success(function(data) {
       o.posts.push(data);
     });
   };
 
   o.upvote = function(post) {
-    return $http.put('/posts/' + post._id + '/upvote')
-      .success(function(data) {
+    return $http.put('/posts/' + post._id + '/upvote', null, {
+      headers: {Authorization: 'Bearer ' + auth.getToken()}
+    }).success(function(data) {
         post.upvotes += 1;
       });
   };
@@ -80,12 +83,15 @@ app.factory('posts', ['$http', function($http) {
   };
 
   o.addComment = function(id, comment) {
-    return $http.post('/posts/' + id + '/comments', comment);
+    return $http.post('/posts/' + id + '/comments', comment, {
+      headers: {Authorization: 'Bearer ' + auth.getToken()}
+    });
   };
 
   o.upvoteComment = function(post, comment) {
-    return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/upvote')
-      .success(function(data) {
+    return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/upvote', null, {
+      headers: {Authorization: 'Bearer ' + auth.getToken()}
+    }).success(function(data) {
         comment.upvotes += 1;
       });
   };
@@ -137,7 +143,7 @@ app.factory('auth', ['$http', '$window', function($http, $window) {
     });
   };
 
-  app.logOut = function() {
+  auth.logOut = function() {
     $window.localStorage.removeItem('flapper-news-token');
   };
 
@@ -146,9 +152,11 @@ app.factory('auth', ['$http', '$window', function($http, $window) {
 
 app.controller('PostsCtrl', [
   '$scope',
+  'auth',
   'posts',
   'post',
-  function($scope, posts, post){
+  function($scope, auth, posts, post){
+    $scope.isLoggedIn = auth.isLoggedIn;
     $scope.post = post;
     $scope.addComment = function() {
       if ($scope.body === '') return;
@@ -171,8 +179,10 @@ app.controller('PostsCtrl', [
 
 app.controller('MainCtrl', [
   '$scope',
+  'auth',
   'posts',
-  function($scope, posts) {
+  function($scope, auth, posts) {
+    $scope.isLoggedIn = auth.isLoggedIn;
     $scope.test = 'Hello world!';
     $scope.posts = posts.posts;
     $scope.addPost = function() {
@@ -215,5 +225,15 @@ app.controller('AuthCtrl', [
         $state.go('home');
       });
     };
+  }
+]);
+
+app.controller('NavCtrl', [
+  '$scope',
+  'auth',
+  function($scope, auth) {
+    $scope.isLoggedIn = auth.isLoggedIn;
+    $scope.currentUser = auth.currentUser;
+    $scope.logOut = auth.logOut;
   }
 ]);

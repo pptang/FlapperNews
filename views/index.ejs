@@ -9,6 +9,16 @@
     <style> .glyphicon-thumbs-up { cursor:pointer } </style>
   </head>
   <body ng-app="flapperNews">
+
+    <nav class="navbar navbar-default pull-right" ng-controller="NavCtrl">
+      <ul class="nav navbar-nav">
+        <li ng-show="isLoggedIn()"><a>{{ currentUser() }}</a></li>
+        <li ng-show="isLoggedIn()"><a href="" ng-click="logOut()">Log Out</a></li>
+        <li ng-hide="isLoggedIn()"><a href="/#/login">Log In</a></li>
+        <li ng-hide="isLoggedIn()"><a href="/#/register">Register</a></li>
+      </ul>
+    </nav>
+
     <div class="row">
       <div class="col-md-6 col-md-offset-3">
         <ui-view></ui-view>
@@ -30,13 +40,16 @@
           <span ng-hide="post.link">
             {{post.title}}
           </span>
+          <span ng-show="post.author">
+            posted by <a> {{post.author}}</a>
+          </span>
           <span>
             <a href="#/posts/{{post._id}}">Comments</a>
           </span>
         </span>
       </div>
 
-      <form ng-submit="addPost()" style="margin-top:30px;">
+      <form ng-submit="addPost()" ng-show="isLoggedIn()" style="margin-top:30px;">
         <h3>Add a new post</h3>
 
         <div class="form-group">
@@ -49,6 +62,10 @@
         </div>
         <button type="submit" class="btn btn-primary">Post</button>
       </form>
+
+      <div ng-hide="isLoggedIn()">
+        <h3>You need to <a href="/#/login">Log In</a> or <a href="/#/register">Register</a> before you can add a post.</h3>
+      </div>
     </script>
 
     <script type="text/ng-template" id="/posts.html">
@@ -74,6 +91,7 @@
       </div>
 
       <form ng-submit="addComment()"
+        ng-show="isLoggedIn()"
         style="margin-top:30px;">
         <h3>Add a new comment</h3>
         <div class="form-group">
@@ -81,6 +99,9 @@
         </div>
         <button type="submit" class="btn btn-primary">Post</button>
       </form>
+      <div ng-hide="isLoggedIn()">
+        <h3>You need to <a href="/#/login">Log In</a> or <a href="/#/register">Register<a> before you can comment.</h3>
+      </div>
     </script>
 
     <script type="text/ng-template" id="/register.html">
