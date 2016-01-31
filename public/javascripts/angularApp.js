@@ -44,6 +44,16 @@ app.config([
             $state.go('home');
           }
         }]
+      })
+      .state('forgotPwd', {
+        url: '/forgotPwd',
+        templateUrl: '/forgotPwd.html',
+        controller: 'AuthCtrl',
+      })
+      .state('resetPwd', {
+        url: '/resetPwd?tokenId',
+        templateUrl: '/resetPwd.html',
+        controller: 'AuthCtrl',
       });
 
     $urlRouterProvider.otherwise('home');
@@ -147,6 +157,19 @@ app.factory('auth', ['$http', '$window', function($http, $window) {
     $window.localStorage.removeItem('flapper-news-token');
   };
 
+  auth.forgotPwd = function(email) {
+    return $http.post('/forgotPwd', { email : email }).success(function(res) {
+      return res.data;
+    });
+  };
+
+  auth.resetPwd = function(newPwd, tokenId) {
+    // console.log(tokenId);
+    return $http.post('/resetPwd/' + tokenId, { 'newPwd': newPwd }).success(function(res) {
+      return res.data;
+    });
+  };
+
   return auth;
 }])
 
@@ -207,7 +230,8 @@ app.controller('AuthCtrl', [
   '$scope',
   '$state',
   'auth',
-  function($scope, $state, auth) {
+  '$stateParams',
+  function($scope, $state, auth, $stateParams) {
     $scope.user = {};
 
     $scope.register = function() {
@@ -225,6 +249,23 @@ app.controller('AuthCtrl', [
         $state.go('home');
       });
     };
+
+    $scope.forgotPwd = function() {
+      auth.forgotPwd($scope.email).error(function(error) {
+        $scope.error = error;
+      }).then(function(data) {
+        $scope.sendForgotEmailRespMsg = data;
+      });
+    };
+
+    $scope.resetPwd = function() {
+      auth.resetPwd($scope.newPwd, $stateParams.tokenId).error(function(error) {
+        $scope.error = error;
+      }).then(function(data) {
+        $scope.resetPwdRespMsg = data;
+      });
+    };
+
   }
 ]);
 

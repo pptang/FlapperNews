@@ -7,6 +7,120 @@ var jwt = require('express-jwt');
 var auth = jwt({secret: 'SECRET', userProperty: 'payload'});
 var express = require('express');
 var router = express.Router();
+var fs = require('fs');
+var nodemailer = require('nodemailer');
+var async = require('async');
+var cypto = require('crypto');
+var transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user:'donaldduck518@gmail.com',
+    pass: 'biblecashier',
+    secure: true
+  }
+});
+
+/* For Email Server */
+router.post('/forgotPwd', function(req, res, next) {
+
+  async.waterfall([
+    function(done) {
+      cypto.randomBytes(20, function(err, buf) {
+        var token = buf.toString('hex');
+        done(err, token);
+      });
+    },
+    function(token, done) {
+      User.findOne({ username: req.body.email }, function(err, user) {
+        if (!user) {
+          return res.status(400).json({ message: 'No account with that email address exists.'});
+        }
+
+        user.resetPasswordToken = token;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+        user.save(function(err) {
+          done(err, token, user);
+        });
+
+      });
+    },
+    function(token, user, done) {
+      var mailOptions = {
+        from: 'donaldduck518@gmail.com',
+        to: user.username,
+        subject: 'Flapper Neews Password Reset',
+        text: 'Please click on the following link to reset your password:\n\n' +
+        'http://' + req.headers.host + '/reset/' + token + '\n\n',
+      }
+      transporter.sendMail(mailOptions, function(error, info) {
+        done(error, info.response);
+
+      });
+    }
+  ], function(err, data) {
+      if (err) res.json({error: err});
+      else return res.json({yo: data});
+  });
+
+});
+
+router.get('/reset/:token', function(req, res, next) {
+  User.findOne({
+    resetPasswordToken: req.params.token,
+    resetPasswordExpires: { $gt: Date.now() }
+  }, function(err, user) {
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired'});
+    }
+
+    res.redirect('/#/resetPwd?tokenId=' + user.resetPasswordToken);
+    // res.json({user: user});
+
+  });
+});
+
+router.post('/resetPwd/:token', function(req, res, next) {
+  async.waterfall([
+    function(done) {
+      User.findOne({
+        resetPasswordToken: req.params.token,
+        resetPasswordExpires: { $gt: Date.now() }
+      }, function(err, user) {
+        if(!user) {
+          return res.status(400).json({ message: 'Password reset token is invalid or has expired'});
+        }
+
+        user.setPassword(req.body.newPwd);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        user.save(function(err) {
+          //TODO: LogIn for user
+          done(err, user);
+        });
+
+      })
+    },
+    function(user, done) {
+      var mailOptions = {
+        from: 'donaldduck518@gmail.com',
+        to: user.username,
+        subject: 'Your password has been changed',
+        text: 'This is a confirmation that the password for your account ' +
+        user.email + ' has just been changed.\n'
+      };
+      transporter.sendMail(mailOptions, function(error, info) {
+        done(error, info.response);
+
+      });
+    }
+  ], function(err, data) {
+    if (err) res.json({error: err});
+    else return res.json({yo: data});
+
+  })
+});
 
 /* GET all posts */
 router.get('/posts', function(req, res, next) {

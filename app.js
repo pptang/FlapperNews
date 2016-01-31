@@ -15,7 +15,6 @@ var users = require('./routes/users');
 
 var app = express();
 
-
 // connect to database
 mongoose.connect('mongodb://localhost/news');
 

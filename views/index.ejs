@@ -120,7 +120,7 @@
         <div class="form-group">
           <input type="text"
             class="form-control"
-            placeholder="Username"
+            placeholder="Email"
             ng-model="user.username"></input>
         </div>
         <div class="form-group">
@@ -159,8 +159,70 @@
           ng-model="user.password"></input>
         </div>
         <button type="submit" class="btn btn-primary">Log In</button>
+        <a href="/#/forgotPwd">Forgot Password</a>
       </form>
     </script>
+
+    <script type="text/ng-template" id="/forgotPwd.html">
+      <div class="page-header">
+        <h1>Flapper News</h1>
+      </div>
+
+      <div ng-show="error" class="alert alert-danger row">
+        <span>{{ error.message }}</span>
+      </div>
+      <form ng-submit="forgotPwd()"
+        style="margin-top:30px;">
+        <h3>Forgot Password</h3>
+        <div class="form-group">
+          <input type="text"
+            class="form-control"
+            placeholder="Email Address"
+            ng-model="email"></input>
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+
+      </form>
+
+      <div ng-show="sendForgotEmailRespMsg" class="alert alert-danger row">
+        <span>{{ sendForgotEmailRespMsg }}</span>
+      </div>
+    </script>
+
+    <script type="text/ng-template" id="/resetPwd.html">
+      <div class="page-header">
+        <h1>Flapper News</h1>
+      </div>
+      <div ng-show="error" class="alert alert-danger row">
+        <span>{{ error.message }}</span>
+      </div>
+      <form ng-submit="resetPwd()"
+        style="margin-top:30px;">
+        <h3>Reset Password</h3>
+        <div class="form-group">
+
+          <div class="form-group">
+
+            <input type="text"
+              class="form-control"
+              placeholder="New Password"
+              ng-model="newPwd"></input>
+          </div>
+          <div class="form-group">
+            <input type="text"
+              class="form-control"
+              placeholder="Confirm New Password"
+              ng-model="confirmNewPwd"></input>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </form>
+
+      <div ng-show="resetPwdRespMsg" class="alert alert-danger row">
+        <span>{{ resetPwdRespMsg }}</span>
+      </div>
+    </script>
+
 
   </body>
 </html>
